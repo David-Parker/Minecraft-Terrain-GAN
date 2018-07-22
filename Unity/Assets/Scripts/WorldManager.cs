@@ -1,0 +1,33 @@
+﻿using System.Collections;
+using System.Collections.Generic;
+using UnityEngine;
+
+public class WorldManager : MonoBehaviour {
+	public Material material;
+	public const int ChunkSize = 16;
+
+	// Use this for initialization
+	void Start ()
+	{
+		Utils.TripleForLoop(4,4,4, (x,y,z) => {
+			Chunk chunk = new Chunk(new GameObject(), new Vector3(x*ChunkSize,y*ChunkSize,z*ChunkSize), new Vector3(ChunkSize,ChunkSize,ChunkSize), material);
+			chunk.BuildChunk(GetRandomVoxels());
+		});
+	}
+
+	private int[,,] GetRandomVoxels()
+	{
+		int[,,] voxels = new int[ChunkSize,ChunkSize,ChunkSize];
+
+		Utils.TripleForLoop(ChunkSize,ChunkSize,ChunkSize, (x,y,z) => {
+			voxels[x,y,z] = Random.Range(0, 2);
+		});
+
+		return voxels;
+	}
+	
+	// Update is called once per frame
+	void Update ()
+	{
+	}
+}
