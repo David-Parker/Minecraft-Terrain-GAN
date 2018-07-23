@@ -98,6 +98,12 @@ public class Chunk
 		renderer.material = material;
 	}
 
+	public override int GetHashCode()
+	{
+		string pos = "" + this.center.x + this.center.y + this.center.z;
+		return pos.GetHashCode();
+	}
+
 	// Use this for initialization
 	void Start ()
 	{
