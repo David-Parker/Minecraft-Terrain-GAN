@@ -11,8 +11,9 @@ public class Chunk
 	private GameObject parent;
 	private Vector3 center;
 	private Vector3 dimensions;
+	private int chunkSize;
 
-	public Chunk(GameObject parent, Vector3 center, Vector3 dimensions, Material material)
+	public Chunk(GameObject parent, Vector3 center, Vector3 dimensions, Material material, int chunkSize)
 	{
 		if (parent == null)
 		{
@@ -28,6 +29,7 @@ public class Chunk
 		this.center = center;
 		this.dimensions = dimensions;
 		this.material = material;
+		this.chunkSize = chunkSize;
 	}
 
 	public void BuildChunk(int[,,] voxels)
@@ -96,12 +98,6 @@ public class Chunk
 
 		MeshRenderer renderer = this.parent.AddComponent(typeof(MeshRenderer)) as MeshRenderer;
 		renderer.material = material;
-	}
-
-	public override int GetHashCode()
-	{
-		string pos = "" + this.center.x + this.center.y + this.center.z;
-		return pos.GetHashCode();
 	}
 
 	// Use this for initialization
