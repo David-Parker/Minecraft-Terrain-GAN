@@ -5,6 +5,7 @@ using UnityEngine;
 public class WorldManager : MonoBehaviour {
 	public Material material;
 	public const int ChunkSize = 16;
+	public const int worldSize = 16;
 
 	// Use this for initialization
 	void Start ()
@@ -12,21 +13,16 @@ public class WorldManager : MonoBehaviour {
 		int[,,] world = GenerateRandomWorld();
 		Vector3Int currentChunk = new Vector3Int(-1,-1,-1);
 
-		Utils.TripleForLoop(16,16,16, (x,y,z) => {
+		Utils.TripleForLoop(worldSize,worldSize,worldSize, (x,y,z) => {
 			ChunkIndex cIndex = ChunkIndex.ConvertWorldIndexToChunkIndex(new Vector3Int(x,y,z), ChunkSize);
 
-			if (cIndex.chunkIndex != currentChunk)
+			if (!cIndex.chunkIndex.Equals(currentChunk))
 			{
 				Chunk chunk = new Chunk(new GameObject(), new Vector3(cIndex.chunkIndex.X*ChunkSize,cIndex.chunkIndex.Y*ChunkSize,cIndex.chunkIndex.Z*ChunkSize), new Vector3(ChunkSize,ChunkSize,ChunkSize), material);
 				chunk.BuildChunk(GetRandomVoxels());
 				currentChunk = cIndex.chunkIndex;
 			}
 		});
-
-		// Utils.TripleForLoop(4,4,4, (x,y,z) => {
-		// 	Chunk chunk = new Chunk(new GameObject(), new Vector3(x*ChunkSize,y*ChunkSize,z*ChunkSize), new Vector3(ChunkSize,ChunkSize,ChunkSize), material);
-		// 	chunk.BuildChunk(GetRandomVoxels());
-		// });
 	}
 
 	private int[,,] GetRandomVoxels()
@@ -42,9 +38,9 @@ public class WorldManager : MonoBehaviour {
 
 	private int[,,] GenerateRandomWorld()
 	{
-		int[,,] voxels = new int[16,16,16];
+		int[,,] voxels = new int[worldSize,worldSize,worldSize];
 
-		Utils.TripleForLoop(16,16,16, (x,y,z) => {
+		Utils.TripleForLoop(worldSize,worldSize,worldSize, (x,y,z) => {
 			voxels[x,y,z] = Random.Range(0, 2);
 		});
 
