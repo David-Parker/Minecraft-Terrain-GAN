@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class WorldManager : MonoBehaviour {
 	public Material material;
-	public const int ChunkSize = 24;
+	public const int ChunkSize = 20;
 
 	// World dimensions correspond to the total number of blocks that exist in the world.
 	public int worldX = 16;
@@ -20,7 +20,19 @@ public class WorldManager : MonoBehaviour {
 		this.chunkManager = new ChunkManager();
 
 		int testChunkCount = 1;
-		var chunkData = LidarDataTest.Load16CubeDataSet(@"..\Data\FinalData\0B5EE8367C1FBDAE2D831F180F031A2A", testChunkCount, new Vector3Int(worldX, worldY, worldZ));
+
+		// Get world dimensions from file .meta
+
+		string fileName = @"..\Data\FinalData\Baseline\0B5EE8367C1FBDAE2D831F180F031A2A";
+		string metadataFile = fileName + ".meta";
+
+		Vector3Int dimensions = LidarDataTest.ParseDimensions(metadataFile);
+
+		worldX = dimensions.X;
+		worldY = dimensions.Y;
+		worldZ = dimensions.Z;
+
+		var chunkData = LidarDataTest.LoadCubeFile(fileName, testChunkCount, dimensions);
 
 		int[,,] world = GetVoxelsFromChunk(chunkData[0]);
 
@@ -49,8 +61,8 @@ public class WorldManager : MonoBehaviour {
 
 	private int[,,] GetVoxelsFromChunk(LidarWorldData chunkData)
 	{
-		// var chunkData = LidarDataTest.Load16CubeDataSet(@"C:\Src\Hackathon2018\Minecraft-Terrain-GAN\Data\dummy.txt", 50);
 		int[,,] voxels = new int[worldX,worldY,worldZ];
+
 		for (int xOffset = 0; xOffset < worldX; xOffset++)
 		{
 			for (int yOffset = 0; yOffset < worldY; yOffset++)
@@ -61,6 +73,7 @@ public class WorldManager : MonoBehaviour {
 				}
 			}
 		}
+
 		return voxels;
 	}
 
