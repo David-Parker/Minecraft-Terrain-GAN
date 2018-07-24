@@ -6,12 +6,6 @@ using UnityEngine;
 
 namespace Assets.Scripts
 {
-    public class LidarConstants
-    {
-        public const int ChunkSize = 16;
-        public static int ChunkDataLength = ChunkSize * ChunkSize * ChunkSize;
-    }
-
     /// <summary>
     /// represent the raw Lidar World Data as received from external source
     /// World Data will have attributes describing the size of the world in points in 3 dimensions

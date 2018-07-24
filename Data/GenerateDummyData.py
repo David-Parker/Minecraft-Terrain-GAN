@@ -1,5 +1,6 @@
 import numpy as np
 import math
+import copy
 
 final_dimx = 16
 final_dimy = 16
@@ -36,9 +37,26 @@ def generate_cube(mu, sig):
             # Scale to height (since points will be between 0 and 1):
             z_index = min(math.floor(points[j]*final_dimz), final_dimz-1)
             row_z[z_index] = 1
+
+            if (z_index < final_dimz - 1):
+                row_z[z_index+1] = 1
+
             cube[i][j] = row_z
 
     return cube
+
+# Given a cube c[i][j][k], reverse the j,k values. 
+def reverse_y_z_plane(cube):
+    new_cube = copy.deepcopy(cube)
+    for i in range(final_dimx):
+        for j in range(final_dimy):
+            for k in range(final_dimz):
+                storedvalue = new_cube[i][j][k]
+                new_cube[i][j][k] = new_cube[i][k][j]
+                new_cube[i][k][j] = storedvalue
+
+    return new_cube
+
 
 
 # Generates "number" # of random gaussian rows. 
@@ -47,9 +65,10 @@ def generate_rows(number):
     means = np.linspace(0.5, 1, number+1)
 
     for i in means[:-1]:
-        cube = generate_cube(i, 1)
-        flattened = flatten_cube(cube)
-        rows.append(flatten_cube(cube))
+        cube = generate_cube(i, random())
+        reversed_cube = reverse_y_z_plane(cube)
+        flattened = flatten_cube(reversed_cube)
+        rows.append(flattened)
 
     return rows
 

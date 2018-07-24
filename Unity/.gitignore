@@ -37,3 +37,7 @@ sysinfo.txt
 
 # Custom
 .vscode/
+Mono/
+*.exe
+*.dll
+Minecraft_Data/
