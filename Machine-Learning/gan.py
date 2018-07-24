@@ -118,8 +118,9 @@ class GAN():
             if len(batch) < batch_size:
                 # It's possible to return a batch with less than specified batch
                 # size if we're at the end of the list. 
+                num_epochs += 1
                 continue 
-            if batch_number >= len(data_generator) - 1:
+            if batch_number % batches_in_epoch == batches_in_epoch - 1:
                 # We have to manually break as the generator continues indefinitely
                 if num_epochs >= epochs:
                     break
@@ -144,34 +145,45 @@ class GAN():
             print ("Epoch: %d Batch: %d/%d [D loss: %f, acc.: %.2f%%] [G loss: %f]" % (num_epochs, batch_number % batches_in_epoch, batches_in_epoch, d_loss[0], 100*d_loss[1], g_loss))
 
             # If at save interval => save generated image samples
-            if num_epochs % save_interval == 0:
+            if num_epochs % save_interval == 0 and batch_number % batches_in_epoch == 0:
                 self.save_batch(num_epochs)
 
-    def save_batch(self, epoch):
+    def load_from_dir(self, directory):
+        generator_path = os.path.join(directory, f'generator.h5')
+        disc_path = os.path.join(directory, f'disc.h5')
+
+        self.generator.load_weights(generator_path)
+        self.discriminator.load_weights(disc_path)
+
+    def generate_batch(self, save_dir):
         r, c = 5, 5
         noise = np.random.normal(0, 1, (r * c, self.latent_dim))
         gen_batch = self.generator.predict(noise)
 
+        for i, gen in enumerate(gen_batch):
+            gen = np.round(gen.flatten()).astype(np.int16)
+            save_path = os.path.join(save_dir, f"gen-{i}")
+            np.savetxt(save_path, gen[None,:], fmt="%d", delimiter=',')
+
+    def save_batch(self, epoch):
         save_dir = os.path.join(self.results_path, f"generated-{epoch}")
         if not os.path.exists(save_dir):
             os.makedirs(save_dir)
-        for i, gen in enumerate(gen_batch):
-            gen = np.round(gen.flatten()).astype(np.int16)
-            save_path = os.path.join(save_dir, f"gen-{i}.txt")
-            np.savetxt(save_path, gen[None,:], fmt="%d", delimiter=',')
-        generator_save_path = os.path.join(save_dir, f'generator-{epoch}.h5')
-        disc_save_path = os.path.join(save_dir, f'disc-{epoch}.h5')
-        combined_save_path = os.path.join(save_dir, f'combined-{epoch}.h5')
+        self.generate_batch(save_dir)
+
+        generator_save_path = os.path.join(save_dir, f'generator.h5')
+        disc_save_path = os.path.join(save_dir, f'disc.h5')
         self.generator.save(generator_save_path)
         self.discriminator.save(disc_save_path)
-        self.combined.save(combined_save_path)
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--batch_size', action='store', type=int, default=32, help='batch size for data loading')
-    parser.add_argument('--directory', action='store', type=str, default='../Data/FinalData', help='Directory from where to load data')
+    parser.add_argument('--directory', action='store', type=str, default='../Data/FinalData/BaseLine', help='Directory from where to load data')
     parser.add_argument('--results_save_path', action='store', type=str, default='results/', help='Directory to save results to')
+    parser.add_argument('--load_dir', action='store', type=str, default=None, help='Where to load weights from')
+    parser.add_argument('--save_interval', action='store', type=int, default=10, help='Period to save results')
     args = parser.parse_args()
 
     batch_size = args.batch_size
@@ -180,5 +192,11 @@ if __name__ == '__main__':
 
     datagenerator = TerrainDataLoader(directory, batch_size=batch_size)
     gan = GAN(results_save_path)
-    gan.train(datagenerator, epochs=4000, save_interval=50)
+
+    if args.load_dir:
+        load_dir = os.path.realpath(args.load_dir)
+        print (f"Loading weights from {load_dir}")
+        gan.load_from_dir(load_dir)
+
+    gan.train(datagenerator, epochs=4000, save_interval=10)
 

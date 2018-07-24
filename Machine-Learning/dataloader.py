@@ -45,7 +45,8 @@ class TerrainDataLoader(keras.utils.Sequence):
         file_paths = []
         for dirpath, dirnames, filenames in os.walk(self.directory):
             for filename in filenames:
-                file_paths.append(os.path.join(dirpath, filename))
+                if not filename.endswith('.meta'):
+                    file_paths.append(os.path.join(dirpath, filename))
         self.file_paths = file_paths
         self.n = len(file_paths)
 
