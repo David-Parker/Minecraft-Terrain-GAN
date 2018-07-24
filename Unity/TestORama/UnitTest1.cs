@@ -9,7 +9,29 @@ namespace TestORama
     public class UnitTest1
     {
         [TestMethod]
-        public void TestMethod1()
+        public void CreateEllipticParaboloid()
+        {
+            int chunkDimension = 32;
+            string filename = string.Format(@"C:\Src\Hackathon2018\Minecraft-Terrain-GAN\Data\Test\ellipty-hilly-{0}.txt", DateTime.Now.ToString("ddHHmm"));
+            Random rnd = new Random();
+            var worldPoints = new int[chunkDimension, chunkDimension, chunkDimension];
+
+            for (int xOffset = -chunkDimension / 2; xOffset < chunkDimension / 2; xOffset++)
+            {
+                for (int zOffset = -chunkDimension / 2; zOffset < chunkDimension / 2; zOffset++)
+                {
+                    int yHeight = (-(xOffset * xOffset * 2) - (zOffset * zOffset) + 100) / -3;
+                    for (int yOffset = 0; yOffset < chunkDimension; yOffset++)
+                    {
+                        worldPoints[xOffset + chunkDimension / 2, yOffset, zOffset + chunkDimension / 2] = yOffset <= yHeight ? 1 : 0;
+                    }
+                }
+            }
+            OutputFile(chunkDimension, worldPoints, filename);
+        }
+
+        [TestMethod]
+        public void CreateHillsIn16CubeSpace()
         {
             int chunkDimension = 16;
             string filename = string.Format(@"C:\Src\Hackathon2018\Minecraft-Terrain-GAN\Data\Test\hilly-willy-{0}.txt", DateTime.Now.ToString("ddHHmm"));
@@ -56,6 +78,31 @@ namespace TestORama
                 }
                 File.AppendAllText(filename, "\r\n");
             }
+
+        }
+        private void OutputFile(int chunkDimension, int[,,] worldPoints, string filename)
+        {
+            StringBuilder sbWorldPoints = new StringBuilder();
+            for (int xOffset = 0; xOffset < chunkDimension; xOffset++)
+            {
+                for (int yOffset = 0; yOffset < chunkDimension; yOffset++)
+                {
+                    for (int zOffset = 0; zOffset < chunkDimension; zOffset++)
+                    {
+                        sbWorldPoints.Append(worldPoints[xOffset, yOffset, zOffset] + ",");
+                    }
+                }
+            }
+            sbWorldPoints.Remove((chunkDimension * chunkDimension * chunkDimension * 2) - 1, 1);
+            if (!File.Exists(filename))
+            {
+                File.WriteAllText(filename, sbWorldPoints.ToString());
+            }
+            else
+            {
+                File.AppendAllText(filename, sbWorldPoints.ToString());
+            }
+            File.AppendAllText(filename, "\r\n");
         }
     }
 }
