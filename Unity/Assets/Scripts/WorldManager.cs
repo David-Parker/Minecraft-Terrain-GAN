@@ -16,7 +16,7 @@ public class WorldManager : MonoBehaviour {
 	// Use this for initialization
 	void Start ()
 	{
-		int testChunkCount = 50;
+		//int testChunkCount = 50;
 		//var chunkData = LidarDataTest.Load16CubeDataSet(@"C:\Src\Hackathon2018\Minecraft-Terrain-GAN\Data\dummy.txt", testChunkCount);
 
 		// for (int chunkIndex = 0; chunkIndex < testChunkCount; chunkIndex++)
