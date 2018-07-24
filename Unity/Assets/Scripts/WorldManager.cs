@@ -5,54 +5,46 @@ using UnityEngine;
 
 public class WorldManager : MonoBehaviour {
 	public Material material;
-	public const int ChunkSize = 16;
+	public const int ChunkSize = 20;
 
-	public const int worldX = 64;
-	public const int worldY = 64;
-	public const int worldZ = 64;
+	// World dimensions correspond to the total number of blocks that exist in the world.
+	public int worldX = 64;
+	public int worldY = 64;
+	public int worldZ = 64;
 
-	private Dictionary<string, Tuple<Chunk, int[,,]>> chunks;
+	private ChunkManager chunkManager;
 
 	// Use this for initialization
 	void Start ()
 	{
+		this.chunkManager = new ChunkManager();
+
 		int testChunkCount = 50;
 		//var chunkData = LidarDataTest.Load16CubeDataSet(@"C:\Src\Hackathon2018\Minecraft-Terrain-GAN\Data\dummy.txt", testChunkCount);
 
-		// for (int chunkIndex = 0; chunkIndex < testChunkCount; chunkIndex++)
-		// {
-		// 	Chunk chunk = new Chunk(new GameObject(), new Vector3(chunkIndex * ChunkSize,0,0), new Vector3(ChunkSize,ChunkSize,ChunkSize), material);
-		// 	chunk.BuildChunk(GetVoxelsFromChunk(chunkData[chunkIndex]));
-		// }
-
-		chunks = new Dictionary<string, Tuple<Chunk, int[,,]>>();
-		int[,,] world = GenerateRandomWorld();
+		int[,,] world = GenerateRandomWorld(); // TODO: Load from data file
 
 		Utils.TripleForLoop(worldX,worldY,worldZ, (x,y,z) => {
 			ChunkIndex cIndex = ChunkIndex.ConvertWorldIndexToChunkIndex(new Vector3Int(x,y,z), ChunkSize);
-			string chunkAsString = CreateStringRepresentation(cIndex.chunkIndex);
-			Tuple<Chunk, int[,,]> data = null;
+			Chunk chunk;
 
-			if (chunks.ContainsKey(chunkAsString) == false)
+			if (this.chunkManager.TryGetChunk(cIndex.chunkIndex, out chunk) == false)
 			{
-				Chunk chunk = new Chunk(new GameObject(), new Vector3(cIndex.chunkIndex.X*ChunkSize,cIndex.chunkIndex.Y*ChunkSize,cIndex.chunkIndex.Z*ChunkSize), new Vector3(ChunkSize,ChunkSize,ChunkSize), material, ChunkSize);
+				chunk = new Chunk(
+					new GameObject(), 
+					new Vector3(cIndex.chunkIndex.X*ChunkSize,cIndex.chunkIndex.Y*ChunkSize,cIndex.chunkIndex.Z*ChunkSize), 
+					new Vector3Int(ChunkSize,ChunkSize,ChunkSize),
+					cIndex.chunkIndex,
+					material
+				);
 
-				data = new Tuple<Chunk, int[,,]>(chunk, new int[ChunkSize, ChunkSize, ChunkSize]);
-				
-				chunks.Add(chunkAsString, data);
+				this.chunkManager.AddChunk(chunk);
 			}
-			else
-			{
-				data = chunks[chunkAsString];
-			}
-
-			data.Second[cIndex.blockIndex.X, cIndex.blockIndex.Y, cIndex.blockIndex.Z] = world[x,y,z];
+			
+			chunk.AddVoxel(cIndex.blockIndex, world[x,y,z]);
 		});
 
-		foreach (var pair in chunks)
-		{
-			pair.Value.First.BuildChunk(pair.Value.Second);
-		}
+		this.chunkManager.GenerateAllChunks();
 	}
 
 	private int[,,] GetVoxelsFromChunk(LidarWorldData chunkData)
