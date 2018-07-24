@@ -9,8 +9,11 @@ import os
 
 from keras import backend as K
 
-def load_terrain(file_path):
-    return np.loadtxt(file_path, delimiter=',').reshape(16,16,16)
+def load_terrain(file_path, data_format='channels_last'):
+    if data_format == 'channels_first':
+        return np.loadtxt(file_path, delimiter=',').reshape(1,16,16,16)
+    else:
+        return np.loadtxt(file_path, delimiter=',').reshape(16,16,16,1)
 
 class TerrainDataLoader(keras.utils.Sequence):
     def __init__(self, directory,
@@ -26,7 +29,13 @@ class TerrainDataLoader(keras.utils.Sequence):
         self.total_batches_seen = 0
         self.lock = threading.Lock()
         self.index_generator = self._flow_index()
-        self.terrain_shape = terrain_shape
+
+        self.data_format = K.image_data_format()
+        if self.data_format == 'channels_first':
+            self.terrain_shape = (1,) + terrain_shape
+        else:
+            self.terrain_shape = terrain_shape + (1,)
+
 
         print ("Found %d terrain files." % self.n)
 
@@ -34,9 +43,9 @@ class TerrainDataLoader(keras.utils.Sequence):
 
     def _load_data(self):
         file_paths = []
-        for dirpath, dirnames, filenames in os.walk(directory):
+        for dirpath, dirnames, filenames in os.walk(self.directory):
             for filename in filenames:
-                if filename.endswith('.txt'):
+                if not filename.endswith('.meta'):
                     file_paths.append(os.path.join(dirpath, filename))
         self.file_paths = file_paths
         self.n = len(file_paths)
@@ -79,7 +88,7 @@ class TerrainDataLoader(keras.utils.Sequence):
                  dtype=K.floatx())
         for i, j in enumerate(index_array):
             fname = self.file_paths[j]
-            terrain = load_terrain(os.path.join(self.directory, fname))
+            terrain = load_terrain(os.path.join(self.directory, fname), self.data_format)
             batch_x[i] = terrain
         return batch_x
 
@@ -106,3 +115,4 @@ class TerrainDataLoader(keras.utils.Sequence):
         with self.lock:
             index_array = next(self.index_generator)
         return self._get_batch_of_samples(index_array)
+

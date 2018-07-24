@@ -6,22 +6,28 @@ from keras.layers.advanced_activations import LeakyReLU
 from keras.layers.convolutional import UpSampling3D, Conv3D
 from keras.models import Sequential, Model
 from keras.optimizers import Adam
+from keras import backend as K
 
 from dataloader import TerrainDataLoader
 
-import matplotlib.pyplot as plt
-
 import sys
-
+import os
 import numpy as np
 
+import argparse
+
 class GAN():
-    def __init__(self):
-        # Input shape
-        self.input_shape = (16, 16, 16)
+    def __init__(self, results_path):
+        if K.image_data_format() == "channels_first":
+            self.input_shape = (1, 16, 16, 16) # 1 channel, 16x16x16 terrain 
+        else:
+            self.input_shape = (16, 16, 16, 1) # 16x16x16 terrain, 1 channel 
+
         self.latent_dim = 100
 
         optimizer = Adam(0.0002, 0.5)
+
+        self.results_path = results_path
 
         # Build and compile the discriminator
         self.discriminator = self.build_discriminator()
@@ -50,8 +56,8 @@ class GAN():
     def build_generator(self):
         model = Sequential()
 
-        model.add(Dense(128 * 7 * 7, activation="relu", input_dim=self.latent_dim))
-        model.add(Reshape((7, 7, 128)))
+        model.add(Dense(128 * 4 * 4 * 4, activation="relu", input_dim=self.latent_dim))
+        model.add(Reshape((4, 4, 4, 128)))
         model.add(UpSampling3D())
         model.add(Conv3D(128, kernel_size=3, padding="same"))
         model.add(BatchNormalization(momentum=0.8))
@@ -60,7 +66,7 @@ class GAN():
         model.add(Conv3D(64, kernel_size=3, padding="same"))
         model.add(BatchNormalization(momentum=0.8))
         model.add(Activation("relu"))
-        model.add(Conv3D(self.channels, kernel_size=3, padding="same"))
+        model.add(Conv3D(1, kernel_size=3, padding="same"))
         model.add(Activation("tanh"))
 
         model.summary()
@@ -77,7 +83,7 @@ class GAN():
         model.add(LeakyReLU(alpha=0.2))
         model.add(Dropout(0.25))
         model.add(Conv3D(64, kernel_size=3, strides=2, padding="same"))
-        model.add(ZeroPadding3D(padding=((0,1),(0,1))))
+        model.add(ZeroPadding3D(padding=((0,1),(0,1), (0,1))))
         model.add(BatchNormalization(momentum=0.8))
         model.add(LeakyReLU(alpha=0.2))
         model.add(Dropout(0.25))
@@ -105,8 +111,16 @@ class GAN():
 
         valid = np.ones((batch_size, 1))
         fake = np.zeros((batch_size, 1))
+
+        batches_in_epoch = len(data_generator)
+
         for batch_number, batch in enumerate(data_generator):
-            if batch_number >= len(data_generator) - 1:
+            if len(batch) < batch_size:
+                # It's possible to return a batch with less than specified batch
+                # size if we're at the end of the list. 
+                num_epochs += 1
+                continue 
+            if batch_number % batches_in_epoch == batches_in_epoch - 1:
                 # We have to manually break as the generator continues indefinitely
                 if num_epochs >= epochs:
                     break
@@ -128,27 +142,61 @@ class GAN():
             g_loss = self.combined.train_on_batch(noise, valid)
 
             # Plot the progress
-            print ("%d [D loss: %f, acc.: %.2f%%] [G loss: %f]" % (epoch, d_loss[0], 100*d_loss[1], g_loss))
+            print ("Epoch: %d Batch: %d/%d [D loss: %f, acc.: %.2f%%] [G loss: %f]" % (num_epochs, batch_number % batches_in_epoch, batches_in_epoch, d_loss[0], 100*d_loss[1], g_loss))
 
             # If at save interval => save generated image samples
-            if epoch % save_interval == 0:
-                self.save_batch(epoch)
+            if num_epochs % save_interval == 0 and batch_number % batches_in_epoch == 0:
+                self.save_batch(num_epochs)
 
-    def save_imgs(self, epoch):
+    def load_from_dir(self, directory):
+        generator_path = os.path.join(directory, f'generator.h5')
+        disc_path = os.path.join(directory, f'disc.h5')
+
+        self.generator.load_weights(generator_path)
+        self.discriminator.load_weights(disc_path)
+
+    def generate_batch(self, save_dir):
         r, c = 5, 5
         noise = np.random.normal(0, 1, (r * c, self.latent_dim))
         gen_batch = self.generator.predict(noise)
 
-        save_dir = f"generated-{epoch}"
-        if not os.exists(save_dir):
-            os.makedirs(save_dir)
         for i, gen in enumerate(gen_batch):
+            gen = np.round(gen.flatten()).astype(np.int16)
             save_path = os.path.join(save_dir, f"gen-{i}")
-            np.savetxt(gen, save_path, delimiter=',')
+            np.savetxt(save_path, gen[None,:], fmt="%d", delimiter=',')
+
+    def save_batch(self, epoch):
+        save_dir = os.path.join(self.results_path, f"generated-{epoch}")
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+        self.generate_batch(save_dir)
+
+        generator_save_path = os.path.join(save_dir, f'generator.h5')
+        disc_save_path = os.path.join(save_dir, f'disc.h5')
+        self.generator.save(generator_save_path)
+        self.discriminator.save(disc_save_path)
 
 if __name__ == '__main__':
-    gan = GAN()
+    parser = argparse.ArgumentParser()
 
-    directory = os.path.realpath('../Data/')
-    datagenerator = TerrainDataLoader(directory, batch_size=1)
-    dcgan.train(epochs=4000, batch_size=1, save_interval=50)
+    parser.add_argument('--batch_size', action='store', type=int, default=32, help='batch size for data loading')
+    parser.add_argument('--directory', action='store', type=str, default='../Data/FinalData/BaseLine', help='Directory from where to load data')
+    parser.add_argument('--results_save_path', action='store', type=str, default='results/', help='Directory to save results to')
+    parser.add_argument('--load_dir', action='store', type=str, default=None, help='Where to load weights from')
+    parser.add_argument('--save_interval', action='store', type=int, default=10, help='Period to save results')
+    args = parser.parse_args()
+
+    batch_size = args.batch_size
+    directory = os.path.realpath(args.directory)
+    results_save_path = os.path.realpath(args.results_save_path)
+
+    datagenerator = TerrainDataLoader(directory, batch_size=batch_size)
+    gan = GAN(results_save_path)
+
+    if args.load_dir:
+        load_dir = os.path.realpath(args.load_dir)
+        print (f"Loading weights from {load_dir}")
+        gan.load_from_dir(load_dir)
+
+    gan.train(datagenerator, epochs=4000, save_interval=10)
+

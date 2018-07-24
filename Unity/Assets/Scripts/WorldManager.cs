@@ -5,70 +5,75 @@ using UnityEngine;
 
 public class WorldManager : MonoBehaviour {
 	public Material material;
-	public const int ChunkSize = 16;
+	public const int ChunkSize = 20;
 
-	public const int worldX = 64;
-	public const int worldY = 64;
-	public const int worldZ = 64;
+	// World dimensions correspond to the total number of blocks that exist in the world.
+	public int worldX = 16;
+	public int worldY = 16;
+	public int worldZ = 16;
 
-	private Dictionary<string, Tuple<Chunk, int[,,]>> chunks;
+	private ChunkManager chunkManager;
 
 	// Use this for initialization
 	void Start ()
 	{
-		int testChunkCount = 50;
-		//var chunkData = LidarDataTest.Load16CubeDataSet(@"C:\Src\Hackathon2018\Minecraft-Terrain-GAN\Data\dummy.txt", testChunkCount);
+		this.chunkManager = new ChunkManager();
 
-		// for (int chunkIndex = 0; chunkIndex < testChunkCount; chunkIndex++)
-		// {
-		// 	Chunk chunk = new Chunk(new GameObject(), new Vector3(chunkIndex * ChunkSize,0,0), new Vector3(ChunkSize,ChunkSize,ChunkSize), material);
-		// 	chunk.BuildChunk(GetVoxelsFromChunk(chunkData[chunkIndex]));
-		// }
+		int testChunkCount = 1;
 
-		chunks = new Dictionary<string, Tuple<Chunk, int[,,]>>();
-		int[,,] world = GenerateRandomWorld();
+		// Get world dimensions from file .meta
+
+		string fileName = @"..\Data\FinalData\Baseline\0B5EE8367C1FBDAE2D831F180F031A2A";
+		string metadataFile = fileName + ".meta";
+
+		Vector3Int dimensions = LidarDataTest.ParseDimensions(metadataFile);
+
+		worldX = dimensions.X;
+		worldY = dimensions.Y;
+		worldZ = dimensions.Z;
+
+		var chunkData = LidarDataTest.LoadCubeFile(fileName, testChunkCount, dimensions);
+
+		int[,,] world = GetVoxelsFromChunk(chunkData[0]);
 
 		Utils.TripleForLoop(worldX,worldY,worldZ, (x,y,z) => {
 			ChunkIndex cIndex = ChunkIndex.ConvertWorldIndexToChunkIndex(new Vector3Int(x,y,z), ChunkSize);
-			string chunkAsString = CreateStringRepresentation(cIndex.chunkIndex);
-			Tuple<Chunk, int[,,]> data = null;
+			Chunk chunk;
 
-			if (chunks.ContainsKey(chunkAsString) == false)
+			if (this.chunkManager.TryGetChunk(cIndex.chunkIndex, out chunk) == false)
 			{
-				Chunk chunk = new Chunk(new GameObject(), new Vector3(cIndex.chunkIndex.X*ChunkSize,cIndex.chunkIndex.Y*ChunkSize,cIndex.chunkIndex.Z*ChunkSize), new Vector3(ChunkSize,ChunkSize,ChunkSize), material, ChunkSize);
+				chunk = new Chunk(
+					new GameObject(CreateStringRepresentation(cIndex.chunkIndex)), 
+					new Vector3(cIndex.chunkIndex.X*ChunkSize,cIndex.chunkIndex.Y*ChunkSize,cIndex.chunkIndex.Z*ChunkSize), 
+					new Vector3Int(ChunkSize,ChunkSize,ChunkSize),
+					cIndex.chunkIndex,
+					material
+				);
 
-				data = new Tuple<Chunk, int[,,]>(chunk, new int[ChunkSize, ChunkSize, ChunkSize]);
-				
-				chunks.Add(chunkAsString, data);
+				this.chunkManager.AddChunk(chunk);
 			}
-			else
-			{
-				data = chunks[chunkAsString];
-			}
-
-			data.Second[cIndex.blockIndex.X, cIndex.blockIndex.Y, cIndex.blockIndex.Z] = world[x,y,z];
+			
+			chunk.AddVoxel(cIndex.blockIndex, world[x,y,z]);
 		});
 
-		foreach (var pair in chunks)
-		{
-			pair.Value.First.BuildChunk(pair.Value.Second);
-		}
+		this.chunkManager.GenerateAllChunks();
 	}
 
 	private int[,,] GetVoxelsFromChunk(LidarWorldData chunkData)
 	{
-		// var chunkData = LidarDataTest.Load16CubeDataSet(@"C:\Src\Hackathon2018\Minecraft-Terrain-GAN\Data\dummy.txt", 50);
-		int[,,] voxels = new int[ChunkSize,ChunkSize,ChunkSize];
-		for (int xOffset = 0; xOffset < ChunkSize; xOffset++)
+		int[,,] voxels = new int[worldX,worldY,worldZ];
+
+		for (int xOffset = 0; xOffset < worldX; xOffset++)
 		{
-			for (int yOffset = 0; yOffset < ChunkSize; yOffset++)
+			for (int yOffset = 0; yOffset < worldY; yOffset++)
 			{
-				for (int zOffset = 0; zOffset < ChunkSize; zOffset++)
+				for (int zOffset = 0; zOffset < worldZ; zOffset++)
 				{
 					voxels[xOffset, yOffset, zOffset] = chunkData.GetPointData(new Vector3Int(xOffset, yOffset, zOffset)).Exists ? 1 : 0;
 				}
 			}
 		}
+
 		return voxels;
 	}
 

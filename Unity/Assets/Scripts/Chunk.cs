@@ -10,10 +10,16 @@ public class Chunk
 
 	private GameObject parent;
 	private Vector3 center;
-	private Vector3 dimensions;
-	private int chunkSize;
+	private Vector3Int dimensions;
+	private int[,,] voxels;
 
-	public Chunk(GameObject parent, Vector3 center, Vector3 dimensions, Material material, int chunkSize)
+	public Vector3Int ChunkIndex
+	{
+		get;
+		private set;
+	}
+
+	public Chunk(GameObject parent, Vector3 center, Vector3Int dimensions, Vector3Int chunkIndex, Material material)
 	{
 		if (parent == null)
 		{
@@ -29,16 +35,22 @@ public class Chunk
 		this.center = center;
 		this.dimensions = dimensions;
 		this.material = material;
-		this.chunkSize = chunkSize;
+		this.voxels = new int[dimensions.X,dimensions.Y,dimensions.Z];
+		this.ChunkIndex = chunkIndex;
 	}
 
-	public void BuildChunk(int[,,] voxels)
+	public void AddVoxel(Vector3Int position, int value)
 	{
-		int sizeX = (int)this.dimensions.x;
-		int sizeY = (int)this.dimensions.y;
-		int sizeZ = (int)this.dimensions.z;
+		this.voxels[position.X, position.Y, position.Z] = value;
+	}
 
-		if (voxels.GetLength(0) != sizeX || voxels.GetLength(1) != sizeY || voxels.GetLength(2) != sizeZ)
+	public void BuildChunk()
+	{
+		int sizeX = this.dimensions.X;
+		int sizeY = this.dimensions.Y;
+		int sizeZ = this.dimensions.Z;
+
+		if (this.voxels.GetLength(0) != sizeX || this.voxels.GetLength(1) != sizeY || this.voxels.GetLength(2) != sizeZ)
 		{
 			throw new System.ArgumentOutOfRangeException("The dimensions of the voxel grid must match the dimensions of the chunk.");
 		}
@@ -49,7 +61,7 @@ public class Chunk
 		{
 			Vector3 pos = new Vector3(x,y,z);
 			chunkData[x,y,z] = new Block(pos + this.center, pos, this.parent);
-			chunkData[x,y,z].Create(voxels);
+			chunkData[x,y,z].Create(this.voxels);
 		});
 
 		CombineQuads();
@@ -59,9 +71,9 @@ public class Chunk
 	// This will greatly increase rendering performance.
 	private void CombineQuads()
 	{
-		int sizeX = (int)this.dimensions.x;
-		int sizeY = (int)this.dimensions.y;
-		int sizeZ = (int)this.dimensions.z;
+		int sizeX = this.dimensions.X;
+		int sizeY = this.dimensions.Y;
+		int sizeZ = this.dimensions.Z;
 
 		List<Block> blocks = new List<Block>();
 
