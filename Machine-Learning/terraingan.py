@@ -14,13 +14,19 @@ from keras.optimizers import Adam
 from keras.callbacks import TensorBoard
 from keras import backend as K
 
-from dataloader import TerrainDataLoader
-
 import sys
 import os
 import numpy as np
 
-import argparse
+
+def get_gradient_norm_func(model):
+    """Get the gradient norm function of a Keras model"""
+    grads = K.gradients(model.total_loss, model.trainable_weights)
+    summed_squares = [K.sum(K.square(g)) for g in grads]
+    norm = K.sqrt(sum(summed_squares))
+    inputs = model._feed_inputs + model._feed_targets + model._feed_sample_weights
+    func = K.function(inputs, [norm])
+    return func
 
 class TerrainGAN():
     """
@@ -30,13 +36,15 @@ class TerrainGAN():
     ----------
     results_path : str
         The path to save results to
+    input_shape : tuple, optional
+        Defaults to (16, 16, 16)
 
     """
-    def __init__(self, results_path):
+    def __init__(self, results_path, input_shape=(16,16,16)):
         if K.image_data_format() == "channels_first":
-            self.input_shape = (1, 16, 16, 16) # 1 channel, 16x16x16 terrain 
+            self.input_shape = (1,) + input_shape 
         else:
-            self.input_shape = (16, 16, 16, 1) # 16x16x16 terrain, 1 channel 
+            self.input_shape = input_shape + (1,)
 
         self.latent_dim = 100
 
@@ -53,15 +61,15 @@ class TerrainGAN():
         # Build the generator
         self.generator = self.build_generator()
 
-        # The generator takes noise as input and generates imgs
+        # The generator takes noise as input and generates terrains 
         z = Input(shape=(100,))
-        img = self.generator(z)
+        terrain = self.generator(z)
 
         # For the combined model we will only train the generator
         self.discriminator.trainable = False
 
-        # The discriminator takes generated images as input and determines validity
-        valid = self.discriminator(img)
+        # The discriminator takes generated terrains as input and determines validity
+        valid = self.discriminator(terrain)
 
         # The combined model  (stacked generator and discriminator)
         # Trains the generator to fool the discriminator
@@ -70,12 +78,18 @@ class TerrainGAN():
 
         self.log_path = os.path.join(self.results_path, 'logs')
 
+        self.get_gradient_norm = get_gradient_norm_func(self.combined)
+
     def build_generator(self):
         """Construct the graph for the generator"""
         model = Sequential()
 
-        model.add(Dense(128 * 4 * 4 * 4, activation="relu", input_dim=self.latent_dim))
-        model.add(Reshape((4, 4, 4, 128)))
+        dim1 = int(self.input_shape[0] // 4)
+        dim2 = int(self.input_shape[1] // 4)
+        dim3 = int(self.input_shape[2] // 4)
+
+        model.add(Dense(128 * dim1 * dim2 * dim3, activation="relu", input_dim=self.latent_dim))
+        model.add(Reshape((dim1, dim2, dim3, 128)))
         model.add(UpSampling3D())
         model.add(Conv3D(128, kernel_size=3, padding="same"))
         model.add(BatchNormalization(momentum=0.8))
@@ -90,9 +104,9 @@ class TerrainGAN():
         model.summary()
 
         noise = Input(shape=(self.latent_dim,))
-        img = model(noise)
+        terrain = model(noise)
 
-        return Model(noise, img)
+        return Model(noise, terrain)
 
     def build_discriminator(self):
         """Construct the graph for the discriminator"""
@@ -119,10 +133,10 @@ class TerrainGAN():
 
         model.summary()
 
-        img = Input(shape=self.input_shape)
-        validity = model(img)
+        terrain = Input(shape=self.input_shape)
+        validity = model(terrain)
 
-        return Model(img, validity)
+        return Model(terrain, validity)
 
     def write_to_log(self, callback, names, logs, batch_number):
         """Write information to TensorBoard"""
@@ -134,7 +148,8 @@ class TerrainGAN():
             callback.writer.add_summary(summary, batch_number)
             callback.writer.flush()
 
-    def train(self, data_generator, epochs, save_interval=50, label_smoothing=False):
+    def train(self, data_generator, epochs, save_interval=50, 
+              gradient_norm=False, label_smoothing=False):
         """Train the GAN
 
         Parameters
@@ -143,6 +158,12 @@ class TerrainGAN():
         epochs : int
         save_interval : int, optional
             Defaults to 50
+        gradient_norm : bool, optional
+            Defaults to False
+            Whether or not to print the gradient norm for 
+            the generator and discriminator. Including this
+            is helpful to detect failures, but takes a lot
+            longer to train
         label_smoothing : bool, optional
             Defaults to False.
             A trick in stable GAN training is to use label smoothing,
@@ -191,7 +212,7 @@ class TerrainGAN():
             d_loss_real = self.discriminator.train_on_batch(batch, valid_labels)
             d_loss_fake = self.discriminator.train_on_batch(gen_batch, fake_labels)
             d_loss = 0.5 * np.add(d_loss_real, d_loss_fake)
-            self.write_to_log(callback, discriminator_names, d_loss, batch_number)
+
 
             # ---------------------
             #  Train Generator
@@ -200,10 +221,17 @@ class TerrainGAN():
             # Train the generator (wants discriminator to mistake images as real)
             g_loss = self.combined.train_on_batch(noise, valid_labels)
 
+            self.write_to_log(callback, discriminator_names, d_loss, batch_number)
             self.write_to_log(callback, generator_names, [g_loss], batch_number)
 
+            if gradient_norm:
+                gradient_norm = self.get_gradient_norm([noise, valid_labels, np.ones(len(valid_labels))])
+                self.write_to_log(callback, ['gradient norm'], gradient_norm, batch_number)
+                print ("Epoch: %d Batch: %d/%d [D loss: %f, acc.: %.2f%%] [G loss: %f] [Gradient norm: %f]" % (num_epochs, batch_number % batches_in_epoch, batches_in_epoch, d_loss[0], 100*d_loss[1], g_loss, gradient_norm[0]))
+            else:
+                print ("Epoch: %d Batch: %d/%d [D loss: %f, acc.: %.2f%%] [G loss: %f]" % (num_epochs, batch_number % batches_in_epoch, batches_in_epoch, d_loss[0], 100*d_loss[1], g_loss))
+
             # Plot the progress
-            print ("Epoch: %d Batch: %d/%d [D loss: %f, acc.: %.2f%%] [G loss: %f]" % (num_epochs, batch_number % batches_in_epoch, batches_in_epoch, d_loss[0], 100*d_loss[1], g_loss))
 
             # If at save interval => save generated image samples
             if num_epochs % save_interval == 0 and batch_number % batches_in_epoch == 0:
@@ -239,29 +267,3 @@ class TerrainGAN():
         disc_save_path = os.path.join(save_dir, f'disc.h5')
         self.generator.save(generator_save_path)
         self.discriminator.save(disc_save_path)
-
-if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-
-    parser.add_argument('--batch_size', action='store', type=int, default=32, help='batch size for data loading')
-    parser.add_argument('--directory', action='store', type=str, default='../Data/FinalData/BaseLine', help='Directory from where to load data')
-    parser.add_argument('--results_save_path', action='store', type=str, default='results/', help='Directory to save results to')
-    parser.add_argument('--load_dir', action='store', type=str, default=None, help='Where to load weights from')
-    parser.add_argument('--save_interval', action='store', type=int, default=10, help='Period to save results')
-    parser.add_argument('--label_smoothing', action='store_true', help='Whether or not to apply label smoothing. NOTE that this ruins the accuracy metric.')
-    args = parser.parse_args()
-
-    batch_size = args.batch_size
-    directory = os.path.realpath(args.directory)
-    results_save_path = os.path.realpath(args.results_save_path)
-
-    datagenerator = TerrainDataLoader(directory, batch_size=batch_size)
-    gan = TerrainGAN(results_save_path)
-
-    if args.load_dir:
-        load_dir = os.path.realpath(args.load_dir)
-        print (f"Loading weights from {load_dir}")
-        gan.load_from_dir(load_dir)
-
-    gan.train(datagenerator, epochs=4000, save_interval=10, label_smoothing=args.label_smoothing)
-

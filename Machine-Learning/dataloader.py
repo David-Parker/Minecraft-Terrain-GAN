@@ -9,12 +9,12 @@ import os
 
 from keras import backend as K
 
-def load_terrain(file_path, data_format='channels_last'):
-    """Load the 16x16x16 terrain from the file path"""
-    if data_format == 'channels_first':
-        return np.loadtxt(file_path, delimiter=',').reshape(1,16,16,16)
+def load_terrain(file_path, shape=None, data_format='channels_last'):
+    """Load the terrain from the file path"""
+    if shape:
+        return np.loadtxt(file_path, delimiter=',').reshape(shape)
     else:
-        return np.loadtxt(file_path, delimiter=',').reshape(16,16,16,1)
+        return np.loadtxt(file_path, delimiter=',')
 
 class TerrainDataLoader(keras.utils.Sequence):
     """Data Loader for terrain files
@@ -26,7 +26,7 @@ class TerrainDataLoader(keras.utils.Sequence):
         Defaults to 32
     shuffle : bool, optional
         Defaults to True
-    terrain_shape : tuple, optional
+    input_shape : tuple, optional
         Defaults to (16, 16, 16)
     seed : Object, optional,
         Defaults to None
@@ -34,7 +34,7 @@ class TerrainDataLoader(keras.utils.Sequence):
     """
     def __init__(self, directory,
                  batch_size=32, shuffle=True,
-                 terrain_shape=(16, 16, 16),
+                 input_shape=(16, 16, 16),
                  seed=None):
         self.directory = directory
         self.batch_size = batch_size
@@ -48,9 +48,9 @@ class TerrainDataLoader(keras.utils.Sequence):
 
         self.data_format = K.image_data_format()
         if self.data_format == 'channels_first':
-            self.terrain_shape = (1,) + terrain_shape
+            self.input_shape = (1,) + input_shape
         else:
-            self.terrain_shape = terrain_shape + (1,)
+            self.input_shape = input_shape + (1,)
 
 
         print ("Found %d terrain files." % self.n)
@@ -101,11 +101,11 @@ class TerrainDataLoader(keras.utils.Sequence):
 
     def _get_batch_of_samples(self, index_array):
         batch_x = np.zeros(
-                (len(index_array),) + self.terrain_shape,
+                (len(index_array),) + self.input_shape,
                  dtype=K.floatx())
         for i, j in enumerate(index_array):
             fname = self.file_paths[j]
-            terrain = load_terrain(os.path.join(self.directory, fname), self.data_format)
+            terrain = load_terrain(os.path.join(self.directory, fname), shape=self.input_shape, data_format=self.data_format)
             batch_x[i] = terrain
         return batch_x
 
