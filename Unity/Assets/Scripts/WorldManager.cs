@@ -5,12 +5,12 @@ using UnityEngine;
 
 public class WorldManager : MonoBehaviour {
 	public Material material;
-	public const int ChunkSize = 20;
+	public const int ChunkSize = 24;
 
 	// World dimensions correspond to the total number of blocks that exist in the world.
-	public int worldX = 64;
-	public int worldY = 64;
-	public int worldZ = 64;
+	public int worldX = 16;
+	public int worldY = 16;
+	public int worldZ = 16;
 
 	private ChunkManager chunkManager;
 
@@ -19,10 +19,10 @@ public class WorldManager : MonoBehaviour {
 	{
 		this.chunkManager = new ChunkManager();
 
-		int testChunkCount = 50;
-		//var chunkData = LidarDataTest.Load16CubeDataSet(@"C:\Src\Hackathon2018\Minecraft-Terrain-GAN\Data\dummy.txt", testChunkCount);
+		int testChunkCount = 1;
+		var chunkData = LidarDataTest.Load16CubeDataSet(@"..\Data\FinalData\0B5EE8367C1FBDAE2D831F180F031A2A", testChunkCount, new Vector3Int(worldX, worldY, worldZ));
 
-		int[,,] world = GenerateRandomWorld(); // TODO: Load from data file
+		int[,,] world = GetVoxelsFromChunk(chunkData[0]);
 
 		Utils.TripleForLoop(worldX,worldY,worldZ, (x,y,z) => {
 			ChunkIndex cIndex = ChunkIndex.ConvertWorldIndexToChunkIndex(new Vector3Int(x,y,z), ChunkSize);
@@ -50,12 +50,12 @@ public class WorldManager : MonoBehaviour {
 	private int[,,] GetVoxelsFromChunk(LidarWorldData chunkData)
 	{
 		// var chunkData = LidarDataTest.Load16CubeDataSet(@"C:\Src\Hackathon2018\Minecraft-Terrain-GAN\Data\dummy.txt", 50);
-		int[,,] voxels = new int[ChunkSize,ChunkSize,ChunkSize];
-		for (int xOffset = 0; xOffset < ChunkSize; xOffset++)
+		int[,,] voxels = new int[worldX,worldY,worldZ];
+		for (int xOffset = 0; xOffset < worldX; xOffset++)
 		{
-			for (int yOffset = 0; yOffset < ChunkSize; yOffset++)
+			for (int yOffset = 0; yOffset < worldY; yOffset++)
 			{
-				for (int zOffset = 0; zOffset < ChunkSize; zOffset++)
+				for (int zOffset = 0; zOffset < worldZ; zOffset++)
 				{
 					voxels[xOffset, yOffset, zOffset] = chunkData.GetPointData(new Vector3Int(xOffset, yOffset, zOffset)).Exists ? 1 : 0;
 				}
