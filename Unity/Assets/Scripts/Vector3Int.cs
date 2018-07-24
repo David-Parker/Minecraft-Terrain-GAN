@@ -36,4 +36,10 @@ public class Vector3Int
         this.Y = (int)vec3.y;
         this.Z = (int)vec3.z;
     }
+
+    public override bool Equals(object obj)
+    {
+        Vector3Int other = obj as Vector3Int;
+        return this.X == other.X && this.Y == other.Y && this.Z == other.Z;
+    }
 }
