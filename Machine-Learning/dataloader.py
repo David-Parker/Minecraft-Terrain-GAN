@@ -10,12 +10,28 @@ import os
 from keras import backend as K
 
 def load_terrain(file_path, data_format='channels_last'):
+    """Load the 16x16x16 terrain from the file path"""
     if data_format == 'channels_first':
         return np.loadtxt(file_path, delimiter=',').reshape(1,16,16,16)
     else:
         return np.loadtxt(file_path, delimiter=',').reshape(16,16,16,1)
 
 class TerrainDataLoader(keras.utils.Sequence):
+    """Data Loader for terrain files
+    
+    Parameters
+    ----------
+    directory : str
+    batch_size : int, optional
+        Defaults to 32
+    shuffle : bool, optional
+        Defaults to True
+    terrain_shape : tuple, optional
+        Defaults to (16, 16, 16)
+    seed : Object, optional,
+        Defaults to None
+
+    """
     def __init__(self, directory,
                  batch_size=32, shuffle=True,
                  terrain_shape=(16, 16, 16),
@@ -42,6 +58,7 @@ class TerrainDataLoader(keras.utils.Sequence):
         super(TerrainDataLoader, self).__init__()
 
     def _load_data(self):
+        """Load data from directory"""
         file_paths = []
         for dirpath, dirnames, filenames in os.walk(self.directory):
             for filename in filenames:
