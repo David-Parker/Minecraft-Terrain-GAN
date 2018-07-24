@@ -20,7 +20,7 @@ public class WorldManager : MonoBehaviour {
 		this.chunkManager = new ChunkManager();
 
 		int testChunkCount = 1;
-		var chunkData = LidarDataTest.Load16CubeDataSet(@"C:\Coding\Minecraft-Terrain-GAN\Data\FinalData\0B5EE8367C1FBDAE2D831F180F031A2A", testChunkCount, new Vector3Int(worldX, worldY, worldZ));
+		var chunkData = LidarDataTest.Load16CubeDataSet(@"..\Data\FinalData\0B5EE8367C1FBDAE2D831F180F031A2A", testChunkCount, new Vector3Int(worldX, worldY, worldZ));
 
 		int[,,] world = GetVoxelsFromChunk(chunkData[0]);
 
