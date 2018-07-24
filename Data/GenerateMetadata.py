@@ -4,7 +4,7 @@ import os
 Appends metadata info to all blobs in the path specified in datafilepath
 """
 
-file_path = "../Machine-Learning/results/generated-30/"
+file_path = "../Machine-Learning/results/generated-0/"
 
 def run(xdim, ydim, zdim):
     files = os.listdir(file_path)
