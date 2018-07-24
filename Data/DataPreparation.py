@@ -1,17 +1,24 @@
 import os
 import numpy as np
 
-final_dimx = 16
-final_dimy = 16
-final_dimz = 16
+final_dimx = 128
+final_dimy = 24
+final_dimz = 128
 
-file_path = "rawdata/"
-out_path = "inputdata/"
+file_path = "FinalData/Canyon/Intermediate/"
+out_path = "inputdata/Canyon/"
 
 def run(xdim, ydim, zdim):
     files = os.listdir(file_path)
     for f in files:
-        create_file_for_cube(f, xdim, ydim, zdim)
+        if "meta" not in f:
+            create_file_for_cube(f, xdim, ydim, zdim)
+        else:
+            #copy over the metadata file
+            file_loc = file_path + f
+            file_data = open(file_loc, 'r')
+            for line in file_data:
+                write_metadata_to_file(f, line)
 
 
 def create_file_for_cube(f, xdim, ydim, zdim):
@@ -24,8 +31,8 @@ def create_file_for_cube(f, xdim, ydim, zdim):
     for line in file_data:
         # Fill in the cube values, swapping the y & z values...
         # index 0 = xvalue, 1 = zvalue, 2 = yvalue, 
-        feature_values = line.split(",")
-        cube[int(feature_values[0])][int(feature_values[2])][int(feature_values[1])] = 1
+        feature_values = line.rstrip().split(",")
+        cube[int(feature_values[0])][int(feature_values[1])][int(feature_values[2])] = 1
 
         # flatten the cube
         flat_cube = flatten_data(cube)
@@ -35,30 +42,28 @@ def create_file_for_cube(f, xdim, ydim, zdim):
 
 
 def generate_empty_cube(xdim, ydim, zdim):
-    cube = []
-
-    # Generate empty cube
-    for i in range(xdim):
-        row_y = []
-
-        for j in range(ydim):
-            row_y.append([0]*zdim)
-
-        cube.append(row_y)
-
+    cube = np.zeros((xdim,ydim,zdim))
     return cube
+
+def write_metadata_to_file(file_name, line):
+    outfile_loc = out_path + file_name
+    print("Writing metadata to: " + outfile_loc)
+    f = open(outfile_loc, 'w+')
+    f.write(line)
+    f.close()
 
 def write_cube_to_file(file_name, flat_cube):
     outfile_loc = out_path + file_name
     print("Writing input data to: " + outfile_loc)
 
     f = open(outfile_loc, 'w+')
-    f.write(",".join(map(str, flat_cube)))
+    f.write(",".join(map(str, map(int, flat_cube))))
+    f.close()
 
 #Pass in cube 16x16x16 and flattens to an array
 def flatten_data(cube):
-    npcube = np.array(cube)
-    return npcube.flatten('C')
+    # npcube = np.array(cube)
+    return cube.flatten('C')
 
 
 run(final_dimx, final_dimy, final_dimz)
