@@ -31,7 +31,7 @@ public class WorldManager : MonoBehaviour {
 			if (this.chunkManager.TryGetChunk(cIndex.chunkIndex, out chunk) == false)
 			{
 				chunk = new Chunk(
-					new GameObject(), 
+					new GameObject(CreateStringRepresentation(cIndex.chunkIndex)), 
 					new Vector3(cIndex.chunkIndex.X*ChunkSize,cIndex.chunkIndex.Y*ChunkSize,cIndex.chunkIndex.Z*ChunkSize), 
 					new Vector3Int(ChunkSize,ChunkSize,ChunkSize),
 					cIndex.chunkIndex,
