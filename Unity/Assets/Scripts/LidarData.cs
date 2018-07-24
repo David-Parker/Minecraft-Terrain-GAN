@@ -56,7 +56,7 @@ namespace Assets.Scripts
 
         public LidarPointData GetPointData(Vector3Int pointOffset)
         {
-            return RawPoints[pointOffset.Z + (pointOffset.Y * ZSize) + (pointOffset.X * ZSize * YSize)];
+            return RawPoints[pointOffset.X + (pointOffset.Y * ZSize) + (pointOffset.Z * ZSize * YSize)];
         }
     }
 

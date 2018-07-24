@@ -10,11 +10,11 @@ public class WorldManager : MonoBehaviour {
 	// Use this for initialization
 	void Start ()
 	{
-		int testChunkCount = 50;
-		var chunkData = LidarDataTest.Load16CubeDataSet(@"C:\Src\Hackathon2018\Minecraft-Terrain-GAN\Data\dummy.txt", testChunkCount);
+		int testChunkCount = 100;
+		var chunkData = LidarDataTest.Load16CubeDataSet(@"C:\Src\Hackathon2018\Minecraft-Terrain-GAN\Data\Test\hilly-willy-231806.txt", testChunkCount);
 		for (int chunkIndex = 0; chunkIndex < testChunkCount; chunkIndex++)
 		{
-			Chunk chunk = new Chunk(new GameObject(), new Vector3(chunkIndex * ChunkSize,0,0), new Vector3(ChunkSize,ChunkSize,ChunkSize), material);
+			Chunk chunk = new Chunk(new GameObject(), new Vector3((chunkIndex / 10) * ChunkSize, 0, (chunkIndex % 10) * ChunkSize), new Vector3(ChunkSize,ChunkSize,ChunkSize), material);
 			chunk.BuildChunk(GetVoxelsFromChunk(chunkData[chunkIndex]));
 		}
 
