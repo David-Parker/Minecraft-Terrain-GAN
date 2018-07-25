@@ -21,13 +21,13 @@ public class WorldManager : MonoBehaviour {
 
 	void StartTrainingRender()
 	{
-		string fileNameTraining = @"..\Data\FinalData\Baseline\";
-		string fileNameGenerated = @"..\Machine-Learning\results\generated-10\gen-";
+		//string fileNameTraining = @"..\Data\inputdata\Canyon2x64\";
+		string fileNameGenerated = @"..\Machine-Learning\Canyon\generated-30\gen-";
 
-		Vector3 centerTraining = new Vector3(0,0,0);
-		Vector3 centerGenerated = new Vector3(0,0,32);
+		//Vector3 centerTraining = new Vector3(0,0,0);
+		Vector3 centerGenerated = new Vector3(0,0,96);
 
-		GenerateWorldFromFileSet(fileNameTraining, centerTraining, materialTraining);
+		//GenerateWorldFromFileSet(fileNameTraining, centerTraining, materialTraining);
 		GenerateWorldFromFileSet(fileNameGenerated, centerGenerated, materialGenerated);
 	}
 
