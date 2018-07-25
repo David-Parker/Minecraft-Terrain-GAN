@@ -6,6 +6,8 @@ import argparse
 
 import os
 
+from datetime import datetime
+
 from dataloader import TerrainDataLoader
 from terraingan import TerrainGAN
 
@@ -13,8 +15,11 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--input_shape', action='store', type=int, nargs='+', default=[16,16,16], help='Shape of the input data.')
+    #parser.add_argument('--input_shape', action='store', type=int, nargs='+', default=[32,32,32], help='Shape of the input data.')
     parser.add_argument('--batch_size', action='store', type=int, default=32, help='batch size for data loading')
+    #parser.add_argument('--batch_size', action='store', type=int, default=32, help='batch size for data loading')
     parser.add_argument('--directory', action='store', type=str, default='../Data/FinalData/BaseLine', help='Directory from where to load data')
+    #parser.add_argument('--directory', action='store', type=str, default='../Data/inputdata/UnitTest', help='Directory from where to load data')
     parser.add_argument('--results_save_path', action='store', type=str, default='results/', help='Directory to save results to')
     parser.add_argument('--load_dir', action='store', type=str, default=None, help='Where to load weights from')
     parser.add_argument('--save_interval', action='store', type=int, default=10, help='Period to save results')
@@ -24,7 +29,7 @@ if __name__ == '__main__':
 
     batch_size = args.batch_size
     directory = os.path.realpath(args.directory)
-    results_save_path = os.path.realpath(args.results_save_path)
+    results_save_path = os.path.join(os.path.realpath(args.results_save_path), datetime.utcnow().strftime("%y-%m-%dT%H-%M-%S"))
 
     input_shape = tuple(args.input_shape)
 
