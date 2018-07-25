@@ -1,12 +1,12 @@
 import os
 import numpy as np
 
-final_dimx = 128
+final_dimx = 64
 final_dimy = 24
-final_dimz = 128
+final_dimz = 64
 
-file_path = "FinalData/Canyon/Intermediate/"
-out_path = "inputdata/Canyon/"
+file_path = "FinalData/Terrain1/"
+out_path = "inputdata/Canyon2x64/"
 
 def run(xdim, ydim, zdim):
     files = os.listdir(file_path)

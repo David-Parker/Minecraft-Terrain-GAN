@@ -17,4 +17,4 @@ def generate_metadata(filename, xdim, ydim, zdim):
     f.close()
 
 
-run(16,16,16)
+run(128,24,128)
