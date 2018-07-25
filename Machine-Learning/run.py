@@ -12,7 +12,7 @@ from terraingan import TerrainGAN
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--input_shape', action='store', type=tuple, default=(16,16,16), help='Shape of the input data.')
+    parser.add_argument('--input_shape', action='store', type=int, nargs='+', default=[16,16,16], help='Shape of the input data.')
     parser.add_argument('--batch_size', action='store', type=int, default=32, help='batch size for data loading')
     parser.add_argument('--directory', action='store', type=str, default='../Data/FinalData/BaseLine', help='Directory from where to load data')
     parser.add_argument('--results_save_path', action='store', type=str, default='results/', help='Directory to save results to')
@@ -26,13 +26,14 @@ if __name__ == '__main__':
     directory = os.path.realpath(args.directory)
     results_save_path = os.path.realpath(args.results_save_path)
 
-    input_shape = args.input_shape
+    input_shape = tuple(args.input_shape)
 
     if len(input_shape) != 3:
         raise ValueError(f'Expected an input shape of 3D, instead got {input_shape}')
+    print(f"Input shape: {input_shape}")
 
     datagenerator = TerrainDataLoader(directory, batch_size=batch_size, input_shape=input_shape)
-    gan = TerrainGAN(results_save_path)
+    gan = TerrainGAN(results_save_path, input_shape=input_shape)
 
     if args.load_dir:
         load_dir = os.path.realpath(args.load_dir)

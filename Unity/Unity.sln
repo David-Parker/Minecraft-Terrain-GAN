@@ -1,11 +1,7 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27703.2042
-MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp", "Assembly-CSharp.csproj", "{CD8C9303-404B-FB8D-6B9B-21988D5CAC0A}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestORama", "TestORama\TestORama.csproj", "{4EF3AD2A-A6C2-4B7A-B357-C7C826262DFE}"
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Unity", "Assembly-CSharp.csproj", "{CD8C9303-404B-FB8D-6B9B-21988D5CAC0A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,16 +13,9 @@ Global
 		{CD8C9303-404B-FB8D-6B9B-21988D5CAC0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CD8C9303-404B-FB8D-6B9B-21988D5CAC0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CD8C9303-404B-FB8D-6B9B-21988D5CAC0A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4EF3AD2A-A6C2-4B7A-B357-C7C826262DFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4EF3AD2A-A6C2-4B7A-B357-C7C826262DFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4EF3AD2A-A6C2-4B7A-B357-C7C826262DFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4EF3AD2A-A6C2-4B7A-B357-C7C826262DFE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {824BDB28-7A1A-4760-BE50-1571972D1454}
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = Assembly-CSharp.csproj
