@@ -12,22 +12,35 @@ namespace TestORama
         public void CreateEllipticParaboloid()
         {
             int chunkDimension = 32;
-            string filename = string.Format(@"C:\Src\Hackathon2018\Minecraft-Terrain-GAN\Data\Test\ellipty-hilly-{0}.txt", DateTime.Now.ToString("ddHHmm"));
+            string filePath = string.Format(@"C:\Src\Hackathon2018\Minecraft-Terrain-GAN\Data\Test\ellipty-hilly-{0}", DateTime.Now.ToString("ddHHmm"));
+            Directory.CreateDirectory(filePath);
+
             Random rnd = new Random();
             var worldPoints = new int[chunkDimension, chunkDimension, chunkDimension];
-
-            for (int xOffset = -chunkDimension / 2; xOffset < chunkDimension / 2; xOffset++)
+            for (int chunkIndex = 0; chunkIndex < 1000; chunkIndex++)
             {
-                for (int zOffset = -chunkDimension / 2; zOffset < chunkDimension / 2; zOffset++)
+                string filename = string.Format("example{0:D4}.txt", chunkIndex);
+                int hillBase = rnd.Next(50, 120);     // initial: 100
+                float xCompression = (float)rnd.Next(30, 150) / 100;    // initial 1.5 and .7
+                float zCompression = (float)rnd.Next(30, 150) / 100;
+                float hillCompression = (float)rnd.Next(40, 80) / 10;       // initial 5
+
+                for (int xOffset = -chunkDimension / 2; xOffset < chunkDimension / 2; xOffset++)
                 {
-                    int yHeight = (-(xOffset * xOffset * 2) - (zOffset * zOffset) + 100) / -3;
-                    for (int yOffset = 0; yOffset < chunkDimension; yOffset++)
+                    for (int zOffset = -chunkDimension / 2; zOffset < chunkDimension / 2; zOffset++)
                     {
-                        worldPoints[xOffset + chunkDimension / 2, yOffset, zOffset + chunkDimension / 2] = yOffset <= yHeight ? 1 : 0;
+                        int yHeight = (int)((-(xOffset * xOffset * xCompression) - (zOffset * zOffset * zCompression) + hillBase) / hillCompression);
+                        // base of one level
+                        worldPoints[xOffset + chunkDimension / 2, 0, zOffset + chunkDimension / 2] = 1;
+                        // now the hill
+                        for (int yOffset = 1; yOffset < chunkDimension; yOffset++)
+                        {
+                            worldPoints[xOffset + chunkDimension / 2, yOffset, zOffset + chunkDimension / 2] = yOffset <= yHeight ? 1 : 0;
+                        }
                     }
                 }
+                OutputFile(chunkDimension, worldPoints, Path.Combine(filePath,filename));
             }
-            OutputFile(chunkDimension, worldPoints, filename);
         }
 
         [TestMethod]
@@ -55,28 +68,7 @@ namespace TestORama
                         }
                     }
                 }
-                //int[] worldPointsFlatArray = new int[chunkDimension * chunkDimension * chunkDimension];
-                StringBuilder sbWorldPoints = new StringBuilder();
-                for (int xOffset = 0; xOffset < chunkDimension; xOffset++)
-                {
-                    for (int yOffset = 0; yOffset < chunkDimension; yOffset++)
-                    {
-                        for (int zOffset = 0; zOffset < chunkDimension; zOffset++)
-                        {
-                            sbWorldPoints.Append(worldPoints[xOffset, yOffset, zOffset] + ",");
-                        }
-                    }
-                }
-                sbWorldPoints.Remove((chunkDimension * chunkDimension * chunkDimension * 2) - 1, 1);
-                if (!File.Exists(filename))
-                {
-                    File.WriteAllText(filename, sbWorldPoints.ToString());
-                }
-                else
-                {
-                    File.AppendAllText(filename, sbWorldPoints.ToString());
-                }
-                File.AppendAllText(filename, "\r\n");
+                OutputFile(chunkDimension, worldPoints, filename);
             }
 
         }
