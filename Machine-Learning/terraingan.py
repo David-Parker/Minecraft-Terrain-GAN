@@ -259,6 +259,7 @@ class TerrainGAN():
 
         while num_generated < number_of_samples:
             num_generated += self.generate_batch(save_dir, start_idx=num_generated)
+        return num_generated
 
     def generate_batch(self, save_dir, start_idx=0):
         """Generate and save a batch for the generator"""

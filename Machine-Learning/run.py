@@ -67,6 +67,8 @@ if __name__ == '__main__':
 
         gan = TerrainGAN(input_shape=input_shape)
         gan.load_from_dir(model_dir)
-        gan.generate_samples(save_dir, num_samples)
+        generated = gan.generate_samples(save_dir, num_samples)
+        print (f"Generated {generated} samples")
+
     else:
         raise ValueError(f'Invalid mode {args.mode}')
