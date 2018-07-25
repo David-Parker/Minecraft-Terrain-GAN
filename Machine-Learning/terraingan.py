@@ -46,6 +46,8 @@ class TerrainGAN():
         else:
             self.input_shape = input_shape + (1,)
 
+        print (f"GAN input shape: {self.input_shape}")
+
         self.latent_dim = 100
 
         optimizer = Adam(0.0002, 0.5)
@@ -230,8 +232,6 @@ class TerrainGAN():
                 print ("Epoch: %d Batch: %d/%d [D loss: %f, acc.: %.2f%%] [G loss: %f] [Gradient norm: %f]" % (num_epochs, batch_number % batches_in_epoch, batches_in_epoch, d_loss[0], 100*d_loss[1], g_loss, gradient_norm[0]))
             else:
                 print ("Epoch: %d Batch: %d/%d [D loss: %f, acc.: %.2f%%] [G loss: %f]" % (num_epochs, batch_number % batches_in_epoch, batches_in_epoch, d_loss[0], 100*d_loss[1], g_loss))
-
-            # Plot the progress
 
             # If at save interval => save generated image samples
             if num_epochs % save_interval == 0 and batch_number % batches_in_epoch == 0:
