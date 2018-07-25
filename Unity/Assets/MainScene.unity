@@ -318,7 +318,7 @@ MonoBehaviour:
   materialTraining: {fileID: 2100000, guid: 75e9f224777397a44ae17c43a22f1dda, type: 2}
   materialGenerated: {fileID: 2100000, guid: f815bb75e76267d4d9937fb2b9d801b9, type: 2}
   fileStart: 0
-  fileEnd: 10
+  fileEnd: 5
 --- !u!4 &1780823556
 Transform:
   m_ObjectHideFlags: 0
