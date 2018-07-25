@@ -13,30 +13,51 @@ public class WorldManager : MonoBehaviour {
 	// Use this for initialization
 	void Start ()
 	{
+		StartTrainingRender();
+		//StartTestRender();
+	}
+
+	void StartTrainingRender()
+	{
 		string fileNameTraining = @"..\Data\FinalData\Baseline\";
 		string fileNameGenerated = @"..\Machine-Learning\results\generated-10\gen-";
 
 		Vector3 centerTraining = new Vector3(0,0,0);
 		Vector3 centerGenerated = new Vector3(0,0,32);
 
-		GenerateWorldFromFile(fileNameTraining, centerTraining, materialTraining);
-		GenerateWorldFromFile(fileNameGenerated, centerGenerated, materialGenerated);
+		GenerateWorldFromFileSet(fileNameTraining, centerTraining, materialTraining);
+		GenerateWorldFromFileSet(fileNameGenerated, centerGenerated, materialGenerated);
 	}
 
-	private void GenerateWorldFromFile(string filePath, Vector3 center, Material material)
+	void StartTestRender()
+	{
+		string fileNameTest = @"..\Data\Test\ellipty-hilly-241604.txt";
+
+		Vector3 cubeCenter = new Vector3(0,0,0);
+		Vector3Int cubeDimensions = new Vector3Int(32, 32, 32);
+
+		GenerateWorldFromFile(fileNameTest, cubeDimensions, materialTraining, ref cubeCenter);
+	}
+
+	private void GenerateWorldFromFileSet(string filePath, Vector3 center, Material material)
 	{
 		for (int i = fileStart; i < fileEnd; i++)
 		{
-			ChunkManager chunkManager = new ChunkManager();
-
-			int testChunkCount = 1;
-
-			// Get world dimensions from file .meta
-
 			string fileName = filePath + i;
 			string metadataFile = fileName + ".meta";
 
+			// Get world dimensions from file .meta
 			Vector3Int dimensions = LidarDataTest.ParseDimensions(metadataFile);
+
+			GenerateWorldFromFile(fileName, dimensions, material, ref center);
+		}
+	}
+
+	private void GenerateWorldFromFile(string fileName, Vector3Int dimensions, Material material, ref Vector3 center)
+	{
+			ChunkManager chunkManager = new ChunkManager();
+
+			int testChunkCount = 1;
 
 			// World dimensions correspond to the total number of blocks that exist in the world.
 			int worldX = dimensions.X;
@@ -47,6 +68,7 @@ public class WorldManager : MonoBehaviour {
 
 			int[,,] world = GetVoxelsFromChunk(chunkData[0], dimensions);
 
+			var localCenter = center;
 			Utils.TripleForLoop(worldX,worldY,worldZ, (x,y,z) => {
 				ChunkIndex cIndex = ChunkIndex.ConvertWorldIndexToChunkIndex(new Vector3Int(x,y,z), ChunkSize);
 				Chunk chunk;
@@ -55,7 +77,7 @@ public class WorldManager : MonoBehaviour {
 				{
 					chunk = new Chunk(
 						new GameObject(CreateStringRepresentation(cIndex.chunkIndex)), 
-						new Vector3(cIndex.chunkIndex.X*ChunkSize,cIndex.chunkIndex.Y*ChunkSize,cIndex.chunkIndex.Z*ChunkSize) + center, 
+						new Vector3(cIndex.chunkIndex.X*ChunkSize,cIndex.chunkIndex.Y*ChunkSize,cIndex.chunkIndex.Z*ChunkSize) + localCenter, 
 						new Vector3Int(ChunkSize,ChunkSize,ChunkSize),
 						cIndex.chunkIndex,
 						material
@@ -70,7 +92,6 @@ public class WorldManager : MonoBehaviour {
 			chunkManager.GenerateAllChunks();
 
 			center += new Vector3(worldX, 0, 0);
-		}
 	}
 
 	private int[,,] GetVoxelsFromChunk(LidarWorldData chunkData, Vector3Int dimensions)
