@@ -13,14 +13,14 @@ public class WorldManager : MonoBehaviour {
 	// Use this for initialization
 	void Start ()
 	{
-		string fileNameTraining = @"..\Data\FinalData\Baseline\";
-		string fileNameGenerated = @"..\Machine-Learning\results\generated-10\gen-";
+		string fileNameTraining = @"..\Data\inputdata\Canyon\";
+		//string fileNameGenerated = @"..\Machine-Learning\results\generated-10\gen-";
 
 		Vector3 centerTraining = new Vector3(0,0,0);
-		Vector3 centerGenerated = new Vector3(0,0,32);
+		//Vector3 centerGenerated = new Vector3(0,0,32);
 
 		GenerateWorldFromFile(fileNameTraining, centerTraining, materialTraining);
-		GenerateWorldFromFile(fileNameGenerated, centerGenerated, materialGenerated);
+		//GenerateWorldFromFile(fileNameGenerated, centerGenerated, materialGenerated);
 	}
 
 	private void GenerateWorldFromFile(string filePath, Vector3 center, Material material)
