@@ -11,4 +11,4 @@ The basic idea is to train two networks simultaneously in a minimax optimization
 
 We plan to use a GAN and train it on real world terrain data and then use it to generate new terrain datasets and visualize them in a Minecraft voxel-like world.
 
-![GAN Generated Terrain:](https://i.imgur.com/yJNj2u7.png)
+![GAN Generated Terrain:](https://i.imgur.com/woQaggq.jpg)
