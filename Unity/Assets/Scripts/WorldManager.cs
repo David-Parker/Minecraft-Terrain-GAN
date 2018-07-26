@@ -9,8 +9,10 @@ public class WorldManager : MonoBehaviour {
 	public Material materialTraining;
 	public Material materialGenerated;
 	public const int ChunkSize = 20;
-	public int fileStart = 0;
-	public int fileEnd = 10;
+	public int fileStartTraining = 0;
+	public int fileEndTraining = 10;
+	public int fileStartGenerated = 0;
+	public int fileEndGenerated = 10;
 
 	// Use this for initialization
 	void Start ()
@@ -21,14 +23,14 @@ public class WorldManager : MonoBehaviour {
 
 	void StartTrainingRender()
 	{
-		//string fileNameTraining = @"..\Data\inputdata\Canyon2x64\";
-		string fileNameGenerated = @"..\Machine-Learning\Canyon\generated-30\gen-";
+		string fileNameTraining = @"..\Data\inputdata\Canyon2x64\";
+		string fileNameGenerated = @"..\Machine-Learning\Canyon-Final\generated-170\gen-";
 
-		//Vector3 centerTraining = new Vector3(0,0,0);
+		Vector3 centerTraining = new Vector3(0,0,0);
 		Vector3 centerGenerated = new Vector3(0,0,96);
 
-		//GenerateWorldFromFileSet(fileNameTraining, centerTraining, materialTraining);
-		GenerateWorldFromFileSet(fileNameGenerated, centerGenerated, materialGenerated);
+		GenerateWorldFromFileSet(fileNameTraining, centerTraining, materialTraining, fileStartTraining, fileEndTraining);
+		GenerateWorldFromFileSet(fileNameGenerated, centerGenerated, materialGenerated, fileStartGenerated, fileEndGenerated);
 	}
 
 	void StartTestRender()
@@ -68,9 +70,9 @@ public class WorldManager : MonoBehaviour {
 		}
 	}
 
-	private void GenerateWorldFromFileSet(string filePath, Vector3 center, Material material)
+	private void GenerateWorldFromFileSet(string filePath, Vector3 center, Material material, int start, int end)
 	{
-		for (int i = fileStart; i < fileEnd; i++)
+		for (int i = start; i < end; i++)
 		{
 			string fileName = filePath + i;
 			string metadataFile = fileName + ".meta";

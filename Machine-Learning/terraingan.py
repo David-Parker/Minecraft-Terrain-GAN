@@ -34,19 +34,21 @@ class TerrainGAN():
 
     Parameters
     ----------
-    results_path : str
-        The path to save results to
+    results_path : str, optional
+        The path to save results to.
+        Defaults to None.
     input_shape : tuple, optional
         Defaults to (16, 16, 16)
 
     """
-    def __init__(self, results_path, input_shape=(16,16,16)):
+    def __init__(self, results_path=None, input_shape=(16,16,16)):
         if K.image_data_format() == "channels_first":
             self.input_shape = (1,) + input_shape 
         else:
             self.input_shape = input_shape + (1,)
 
-        print (f"GAN input shape: {self.input_shape}")
+        if not results_path:
+            results_path = os.path.dirname(__file__)
 
         self.latent_dim = 100
 
@@ -245,16 +247,31 @@ class TerrainGAN():
         self.generator.load_weights(generator_path)
         self.discriminator.load_weights(disc_path)
 
-    def generate_batch(self, save_dir):
+    def generate_samples(self, save_dir, number_of_samples):
+        """Generate a specific number of samples
+        
+        We're really lazy here since we're generating by batches.
+        We will actually generate the first multiple of len(gen_batch)
+        >= number_of_samples
+
+        """
+        num_generated = 0
+
+        while num_generated < number_of_samples:
+            num_generated += self.generate_batch(save_dir, start_idx=num_generated)
+
+    def generate_batch(self, save_dir, start_idx=0):
         """Generate and save a batch for the generator"""
         r, c = 5, 5
+
         noise = np.random.normal(0, 1, (r * c, self.latent_dim))
         gen_batch = self.generator.predict(noise)
 
         for i, gen in enumerate(gen_batch):
             gen = np.round(gen.flatten()).astype(np.int16)
-            save_path = os.path.join(save_dir, f"gen-{i}")
+            save_path = os.path.join(save_dir, f"gen-{start_idx + i}")
             np.savetxt(save_path, gen[None,:], fmt="%d", delimiter=',')
+        return len(gen_batch)
 
     def save_batch(self, epoch):
         """Save information while training"""
