@@ -35,24 +35,38 @@ public class WorldManager : MonoBehaviour {
 
 	void StartTestRender()
 	{
-		//string filePathTest = @"..\Data\Test\ellipty-hilly-241820";
-		string filePathTest = @"C:\Src\Hackathon2018\Minecraft-Terrain-GAN\Machine-Learning\MCTerrainGen05\results\18-07-25T02-55-51\generated-20";
+		string filePathInput = @"..\Data\Test\ellipty-hilly-241820";
+		string filePathOutput = @"C:\Src\Hackathon2018\Minecraft-Terrain-GAN\Machine-Learning\MCTerrainGen05\results\18-07-25T02-55-51\generated-";
 		//string fileNameTest = @"..\Data\Test\ellipty-hilly-241702.txt";
 
-		Vector3 cubeCenter = new Vector3(0,0,0);
+		Vector3 gridCenter = new Vector3(0,0,0);
 		Vector3Int cubeDimensions = new Vector3Int(32, 32, 32);
-		int fileStart = 0;
-		int fileEnd = 25;
-		int dimensionSquare = (int)Math.Ceiling(Math.Sqrt(fileEnd));
+		//int fileStart = 0;
+		int fileCount = 25;
+		int dimensionSquare = (int)Math.Ceiling(Math.Sqrt(fileCount));
 
+		// GenerateGridOfFiles(fileCount, filePathOutput + "280", gridCenter, cubeDimensions, materialTraining, false);
+		GenerateGridOfFiles(fileCount, filePathInput, gridCenter, cubeDimensions, materialTraining, true);
+		// // bump X axis for output grids
+		gridCenter += new Vector3(cubeDimensions.X * (dimensionSquare + 2), 0, 0);
+		GenerateGridOfFiles(fileCount, filePathOutput + "10", gridCenter, cubeDimensions, materialGenerated, false);
+		// // shift Z axis for rest of output grids
+		gridCenter += new Vector3(0, 0, cubeDimensions.X * (dimensionSquare + 2));
+		GenerateGridOfFiles(fileCount, filePathOutput + "280", gridCenter, cubeDimensions, materialGenerated, false);
+	}
 
-		for (int fileIndex = fileStart; fileIndex < fileEnd; fileIndex++)
+	private void GenerateGridOfFiles(int fileCount, string gridFilePath, Vector3 gridOffset, Vector3Int cubeDimensions, Material material, bool inputData)
+	{
+		int dimensionSquare = (int)Math.Ceiling(Math.Sqrt(fileCount));
+
+		for (int fileIndex = 0; fileIndex < fileCount; fileIndex++)
 		{
-			var center = new Vector3(32 * (fileIndex / dimensionSquare), 0, 32 * (fileIndex % dimensionSquare));
+			var center = new Vector3(32 * (fileIndex / dimensionSquare), 0, 32 * (fileIndex % dimensionSquare)) + gridOffset;
+			string fileName = (inputData) ? string.Format("example{0:D4}.txt", fileIndex) : string.Format("gen-{0}", fileIndex);
 			// string fileNameTest = string.Format("example{0:D4}.txt", fileIndex);
-			string fileNameTest = string.Format("gen-{0}", fileIndex);
+			// string fileNameTest = string.Format("gen-{0}", fileIndex);
 
-			GenerateWorldFromFile(Path.Combine(filePathTest, fileNameTest), cubeDimensions, materialTraining, center);
+			GenerateWorldFromFile(Path.Combine(gridFilePath, fileName), cubeDimensions, material, center);
 		}
 	}
 
