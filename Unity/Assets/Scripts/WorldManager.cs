@@ -19,6 +19,7 @@ public class WorldManager : MonoBehaviour {
 	{
 		StartTrainingRender();
 		//StartTestRender();
+		//StartDataVolumeRender();
 	}
 
 	void StartTrainingRender()
@@ -33,26 +34,36 @@ public class WorldManager : MonoBehaviour {
 		GenerateWorldFromFileSet(fileNameGenerated, centerGenerated, materialGenerated, fileStartGenerated, fileEndGenerated);
 	}
 
+	void StartDataVolumeRender()
+	{
+		string fileDataSurface = @"C:\Src\Hackathon2018\Minecraft-Terrain-GAN\Data\inputdata\Canyon2x64\0";
+		Vector3 gridCenter = new Vector3(0,0,0);
+		Vector3Int cubeDimensions = new Vector3Int(64, 24, 64);
+		GenerateWorldFromFile(fileDataSurface, cubeDimensions, materialTraining, gridCenter);
+
+		gridCenter += new Vector3(74, 0, 0);
+		GenerateWorldFromFile(fileDataSurface + "-solid", cubeDimensions, materialTraining, gridCenter);
+	}
 	void StartTestRender()
 	{
-		string filePathInput = @"..\Data\Test\ellipty-hilly-241820";
-		string filePathOutput = @"C:\Src\Hackathon2018\Minecraft-Terrain-GAN\Machine-Learning\MCTerrainGen05\results\18-07-25T02-55-51\generated-";
+		//string filePathInput = @"..\Data\Test\ellipty-hilly-241820";
+		string filePathOutput = @"C:\Src\Hackathon2018\Minecraft-Terrain-GAN\Machine-Learning\Canyon-SolidFilled\18-07-26T19-34-52\generated-";
 		//string fileNameTest = @"..\Data\Test\ellipty-hilly-241702.txt";
 
 		Vector3 gridCenter = new Vector3(0,0,0);
-		Vector3Int cubeDimensions = new Vector3Int(32, 32, 32);
+		Vector3Int cubeDimensions = new Vector3Int(64, 24, 64);
 		//int fileStart = 0;
 		int fileCount = 25;
 		int dimensionSquare = (int)Math.Ceiling(Math.Sqrt(fileCount));
 
-		// GenerateGridOfFiles(fileCount, filePathOutput + "280", gridCenter, cubeDimensions, materialTraining, false);
-		GenerateGridOfFiles(fileCount, filePathInput, gridCenter, cubeDimensions, materialTraining, true);
+		GenerateGridOfFiles(fileCount, filePathOutput + "310", gridCenter, cubeDimensions, materialTraining, false);
+		// GenerateGridOfFiles(fileCount, filePathInput, gridCenter, cubeDimensions, materialTraining, true);
 		// // bump X axis for output grids
-		gridCenter += new Vector3(cubeDimensions.X * (dimensionSquare + 2), 0, 0);
-		GenerateGridOfFiles(fileCount, filePathOutput + "10", gridCenter, cubeDimensions, materialGenerated, false);
+		// gridCenter += new Vector3(cubeDimensions.X * (dimensionSquare + 2), 0, 0);
+		// GenerateGridOfFiles(fileCount, filePathOutput + "10", gridCenter, cubeDimensions, materialGenerated, false);
 		// // shift Z axis for rest of output grids
-		gridCenter += new Vector3(0, 0, cubeDimensions.X * (dimensionSquare + 2));
-		GenerateGridOfFiles(fileCount, filePathOutput + "280", gridCenter, cubeDimensions, materialGenerated, false);
+		// gridCenter += new Vector3(0, 0, cubeDimensions.X * (dimensionSquare + 2));
+		// GenerateGridOfFiles(fileCount, filePathOutput + "280", gridCenter, cubeDimensions, materialGenerated, false);
 	}
 
 	private void GenerateGridOfFiles(int fileCount, string gridFilePath, Vector3 gridOffset, Vector3Int cubeDimensions, Material material, bool inputData)
