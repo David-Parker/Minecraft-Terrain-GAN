@@ -13,5 +13,6 @@ We plan to use a GAN and train it on real world terrain data and then use it to 
 
 ![GAN Generated Terrain:](https://i.imgur.com/woQaggq.jpg)
 
+
 Video:
 [![Minecraft GAN](https://img.youtube.com/vi/e-n1XI-Wb5U/0.jpg)](https://www.youtube.com/watch?v=e-n1XI-Wb5U "Minecraft Terrain Generator GAN")
